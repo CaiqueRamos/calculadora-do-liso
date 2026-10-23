@@ -33,7 +33,7 @@ interface GlobalExpensesHeroProps {
   externalTotal: number;
   externalExpenses?: ExternalExpense[];
   invoices: ParsedInvoice[];
-  onNavigateTab: (tab: 'overview' | 'companies' | 'future' | 'external' | 'transactions' | 'documents') => void;
+  onNavigateTab: (tab: 'overview' | 'ai-analysis' | 'companies' | 'future' | 'external' | 'transactions' | 'documents') => void;
   onSelectBank?: (bank: string | null) => void;
 }
 
@@ -55,13 +55,15 @@ export default function GlobalExpensesHero({
   const externalPct = grandTotal > 0 ? (externalTotal / grandTotal) * 100 : 0;
 
   // Bank amounts
-  const bradescoTotal = invoices.find((i) => i.bank === 'Bradesco')?.totalCurrent || 7936.62;
-  const itauTotal = invoices.find((i) => i.bank === 'Itaú')?.totalCurrent || 2366.59;
-  const nubankTotal = invoices.find((i) => i.bank === 'Nubank')?.totalCurrent || 1219.92;
+  const bradescoTotal = invoices.find((i) => i.bank === 'Bradesco')?.totalCurrent || 0;
+  const itauTotal = invoices.find((i) => i.bank === 'Itaú')?.totalCurrent || 0;
+  const nubankTotal = invoices.find((i) => i.bank === 'Nubank')?.totalCurrent || 0;
+  const caixaTotal = invoices.find((i) => i.bank === 'Caixa')?.totalCurrent || 0;
 
   const bradescoPct = grandTotal > 0 ? (bradescoTotal / grandTotal) * 100 : 0;
   const itauPct = grandTotal > 0 ? (itauTotal / grandTotal) * 100 : 0;
   const nubankPct = grandTotal > 0 ? (nubankTotal / grandTotal) * 100 : 0;
+  const caixaPct = grandTotal > 0 ? (caixaTotal / grandTotal) * 100 : 0;
 
   // External breakdown status
   const paidExternal = externalExpenses.filter((e) => e.status === 'paid').reduce((acc, e) => acc + e.amount, 0);
@@ -127,6 +129,19 @@ export default function GlobalExpensesHero({
             </button>
 
             <button
+              onClick={() => {
+                onNavigateTab('ai-analysis');
+                const el = document.getElementById('ai-essential-variable-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-violet-300 bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-violet-500/20"
+              title="Ver análise da Inteligência Artificial sobre gastos essenciais e variáveis"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+              <span>Análise I.A (44% Essenciais / 56% Variáveis)</span>
+            </button>
+
+            <button
               onClick={() => onNavigateTab('external')}
               className="px-3.5 py-2 rounded-xl text-xs font-semibold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
             >
@@ -166,7 +181,7 @@ export default function GlobalExpensesHero({
                 <div className="flex items-center justify-between text-xs mb-2">
                   <span className="font-semibold text-rose-300 uppercase text-[10px] tracking-wider flex items-center gap-1.5">
                     <CreditCard className="w-3.5 h-3.5 text-rose-400" />
-                    Faturas dos Cartões (3)
+                    Faturas dos Cartões ({invoices.length})
                   </span>
                   <span className="text-xs font-bold text-rose-400">{cardPct.toFixed(1)}% do total</span>
                 </div>
@@ -198,6 +213,15 @@ export default function GlobalExpensesHero({
                   </span>
                   <span className="font-semibold text-purple-200">{formatBRL(nubankTotal)}</span>
                 </div>
+                {caixaTotal > 0 && (
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      Caixa (Eliton Nunes)
+                    </span>
+                    <span className="font-semibold text-blue-300">{formatBRL(caixaTotal)}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -263,6 +287,12 @@ export default function GlobalExpensesHero({
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
                 <span>Nubank ({nubankPct.toFixed(0)}%)</span>
               </span>
+              {caixaTotal > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                  <span>Caixa ({caixaPct.toFixed(0)}%)</span>
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
                 <span>Fora do Cartão ({externalPct.toFixed(0)}%)</span>
@@ -286,6 +316,13 @@ export default function GlobalExpensesHero({
               style={{ width: `${nubankPct}%` }}
               title={`Nubank: ${formatBRL(nubankTotal)} (${nubankPct.toFixed(1)}%)`}
             ></div>
+            {caixaTotal > 0 && (
+              <div 
+                className="bg-blue-500 h-full transition-all duration-700 hover:brightness-110" 
+                style={{ width: `${caixaPct}%` }}
+                title={`Caixa: ${formatBRL(caixaTotal)} (${caixaPct.toFixed(1)}%)`}
+              ></div>
+            )}
             <div 
               className="bg-yellow-400 h-full transition-all duration-700 hover:brightness-110" 
               style={{ width: `${externalPct}%` }}
@@ -367,10 +404,10 @@ export default function GlobalExpensesHero({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Left Column: 3 Cartões */}
+              {/* Left Column: Cartões */}
               <div className="space-y-2">
                 <span className="text-[11px] font-semibold text-rose-300 block uppercase">
-                  Cartões de Crédito (3 Faturas):
+                  Cartões de Crédito ({invoices.length} Faturas):
                 </span>
                 <div className="space-y-1.5">
                   {invoices.map((inv) => (
@@ -385,7 +422,8 @@ export default function GlobalExpensesHero({
                       <div className="flex items-center gap-2.5">
                         <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white ${
                           inv.bank === 'Bradesco' ? 'bg-rose-600' :
-                          inv.bank === 'Itaú' ? 'bg-amber-600' : 'bg-purple-600'
+                          inv.bank === 'Itaú' ? 'bg-amber-600' :
+                          inv.bank === 'Nubank' ? 'bg-purple-600' : 'bg-blue-600'
                         }`}>
                           {inv.bank[0]}
                         </div>

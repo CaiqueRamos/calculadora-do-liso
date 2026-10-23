@@ -12,6 +12,7 @@ import DocumentManager from '@/components/DocumentManager';
 import CompanySpending from '@/components/CompanySpending';
 import ExternalExpenses, { ExternalExpense, DEFAULT_EXPENSES } from '@/components/ExternalExpenses';
 import GlobalExpensesHero from '@/components/GlobalExpensesHero';
+import AIEssentialVariableAnalysis from '@/components/AIEssentialVariableAnalysis';
 import UploadModal from '@/components/UploadModal';
 import { 
   DashboardSummary, 
@@ -30,7 +31,8 @@ import {
   TrendingUp,
   CreditCard,
   Building2,
-  Home as HomeIcon
+  Home as HomeIcon,
+  Bot
 } from 'lucide-react';
 
 export default function Home() {
@@ -43,7 +45,7 @@ export default function Home() {
   const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
   const [externalExpenses, setExternalExpenses] = useState<ExternalExpense[]>(DEFAULT_EXPENSES);
   const [externalExpensesTotal, setExternalExpensesTotal] = useState<number>(2411.12);
-  const [activeTab, setActiveTab] = useState<'overview' | 'companies' | 'future' | 'external' | 'transactions' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai-analysis' | 'companies' | 'future' | 'external' | 'transactions' | 'documents'>('overview');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -244,6 +246,21 @@ export default function Home() {
                 </button>
 
                 <button
+                  onClick={() => setActiveTab('ai-analysis')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === 'ai-analysis'
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/25'
+                      : 'text-slate-400 hover:text-violet-300 hover:bg-slate-800/60 light:text-slate-600 light:hover:bg-slate-100'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 text-violet-400" />
+                  <span>Análise IA (Essencial vs Variável)</span>
+                  <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-md bg-violet-500/20 text-violet-300 font-bold border border-violet-500/30">
+                    44% / 56%
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setActiveTab('companies')}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     activeTab === 'companies'
@@ -322,6 +339,14 @@ export default function Home() {
             {/* 1. VISÃO GERAL */}
             {activeTab === 'overview' && (
               <div className="space-y-6 animate-in fade-in duration-300">
+                {/* Sessão da Home: Análise de I.A dos Gastos Essenciais vs Variáveis */}
+                <AIEssentialVariableAnalysis
+                  summary={summary}
+                  externalExpenses={externalExpenses}
+                  externalExpensesTotal={externalExpensesTotal}
+                  invoices={invoices}
+                />
+
                 {/* Future monthly timeline */}
                 <FutureTimeline
                   timeline={summary.monthlyTimeline}
@@ -395,7 +420,14 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button
+                        onClick={() => setActiveTab('ai-analysis')}
+                        className="w-full py-2.5 rounded-xl text-xs font-semibold text-violet-200 bg-violet-600 hover:bg-violet-500 shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4 text-violet-300" />
+                        <span>Auditoria I.A</span>
+                      </button>
                       <button
                         onClick={() => setActiveTab('companies')}
                         className="w-full py-2.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
@@ -420,6 +452,18 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* 1.5. ANÁLISE IA (ESSENCIAIS VS VARIÁVEIS) */}
+            {activeTab === 'ai-analysis' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <AIEssentialVariableAnalysis
+                  summary={summary}
+                  externalExpenses={externalExpenses}
+                  externalExpensesTotal={externalExpensesTotal}
+                  invoices={invoices}
+                />
               </div>
             )}
 
