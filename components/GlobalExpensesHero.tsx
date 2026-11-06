@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   Clock,
   Layers,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 import { formatBRL, DashboardSummary, ParsedInvoice } from '@/lib/invoiceParser';
 import { ExternalExpense } from '@/components/ExternalExpenses';
@@ -33,8 +34,9 @@ interface GlobalExpensesHeroProps {
   externalTotal: number;
   externalExpenses?: ExternalExpense[];
   invoices: ParsedInvoice[];
-  onNavigateTab: (tab: 'overview' | 'ai-analysis' | 'companies' | 'future' | 'external' | 'transactions' | 'documents') => void;
+  onNavigateTab: (tab: 'overview' | 'ai-analysis' | 'companies' | 'future' | 'external' | 'transactions' | 'documents' | 'open-finance') => void;
   onSelectBank?: (bank: string | null) => void;
+  onOpenPdfExport?: () => void;
 }
 
 export default function GlobalExpensesHero({
@@ -44,6 +46,7 @@ export default function GlobalExpensesHero({
   invoices,
   onNavigateTab,
   onSelectBank,
+  onOpenPdfExport,
 }: GlobalExpensesHeroProps) {
   const [showDetailedList, setShowDetailedList] = useState(false);
 
@@ -140,6 +143,17 @@ export default function GlobalExpensesHero({
               <Sparkles className="w-3.5 h-3.5 text-violet-400" />
               <span>Análise I.A (44% Essenciais / 56% Variáveis)</span>
             </button>
+
+            {onOpenPdfExport && (
+              <button
+                onClick={onOpenPdfExport}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-rose-500/10 active:scale-95"
+                title="Exportar relatório consolidado executivo em PDF"
+              >
+                <FileText className="w-3.5 h-3.5 text-rose-400" />
+                <span>Gerar PDF</span>
+              </button>
+            )}
 
             <button
               onClick={() => onNavigateTab('external')}

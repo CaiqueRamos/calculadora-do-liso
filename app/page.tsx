@@ -14,6 +14,9 @@ import ExternalExpenses, { ExternalExpense, DEFAULT_EXPENSES } from '@/component
 import GlobalExpensesHero from '@/components/GlobalExpensesHero';
 import AIEssentialVariableAnalysis from '@/components/AIEssentialVariableAnalysis';
 import UploadModal from '@/components/UploadModal';
+import PdfExportModal from '@/components/PdfExportModal';
+import PluggyOpenFinanceHub from '@/components/PluggyOpenFinanceHub';
+import { OpenFinanceTransaction } from '@/lib/pluggyClient';
 import { 
   DashboardSummary, 
   ParsedInvoice, 
@@ -32,7 +35,8 @@ import {
   CreditCard,
   Building2,
   Home as HomeIcon,
-  Bot
+  Bot,
+  Landmark
 } from 'lucide-react';
 
 export default function Home() {
@@ -45,8 +49,9 @@ export default function Home() {
   const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
   const [externalExpenses, setExternalExpenses] = useState<ExternalExpense[]>(DEFAULT_EXPENSES);
   const [externalExpensesTotal, setExternalExpensesTotal] = useState<number>(2411.12);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ai-analysis' | 'companies' | 'future' | 'external' | 'transactions' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai-analysis' | 'companies' | 'future' | 'external' | 'transactions' | 'documents' | 'open-finance'>('overview');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Sync external expenses from localStorage on mount
@@ -164,6 +169,7 @@ export default function Home() {
         onRefresh={loadInvoices}
         isLoading={isLoading}
         onExportCsv={handleExportCsv}
+        onOpenPdfExport={() => setIsPdfModalOpen(true)}
         invoicesCount={invoices.length}
       />
 
@@ -218,6 +224,7 @@ export default function Home() {
                 setSelectedBank(bank);
                 setActiveTab('overview');
               }}
+              onOpenPdfExport={() => setIsPdfModalOpen(true)}
             />
 
             {/* Top KPIs: Current Spent vs Future Commitments */}
@@ -330,6 +337,21 @@ export default function Home() {
                 >
                   <FileText className="w-4 h-4" />
                   <span>Leitor & Arquivos ({invoices.length})</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('open-finance')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === 'open-finance'
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-lg shadow-emerald-500/25'
+                      : 'text-emerald-300 hover:text-white hover:bg-emerald-500/15 light:text-emerald-700 light:hover:bg-emerald-50'
+                  }`}
+                >
+                  <Landmark className="w-4 h-4 text-emerald-400" />
+                  <span>Open Finance (Pluggy)</span>
+                  <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                    API
+                  </span>
                 </button>
               </div>
             </div>
@@ -519,6 +541,7 @@ export default function Home() {
                   transactions={summary.allTransactions}
                   selectedBank={selectedBank}
                   onSelectBank={setSelectedBank}
+                  onOpenPdfExport={() => setIsPdfModalOpen(true)}
                 />
               </div>
             )}
@@ -531,6 +554,35 @@ export default function Home() {
                   onUploadFile={handleUploadFile}
                   isUploading={isUploading}
                   onRefresh={loadInvoices}
+                  onOpenPdfExport={() => setIsPdfModalOpen(true)}
+                />
+              </div>
+            )}
+
+            {/* 5. OPEN FINANCE (PLUGGY) */}
+            {activeTab === 'open-finance' && (
+              <div className="animate-in fade-in duration-300">
+                <PluggyOpenFinanceHub
+                  onImportTransactionAsExternal={(tx: OpenFinanceTransaction) => {
+                    const newExp: ExternalExpense = {
+                      id: `pluggy-${tx.id}-${Date.now()}`,
+                      name: `${tx.description} (${tx.institutionName})`,
+                      amount: tx.amount,
+                      category: tx.category || 'Outros Gastos',
+                      dueDateDay: parseInt(tx.date.slice(8, 10), 10) || 10,
+                      status: tx.status === 'POSTED' ? 'paid' : 'pending',
+                      isRecurring: false,
+                    };
+                    const updated = [newExp, ...externalExpenses];
+                    setExternalExpenses(updated);
+                    const sum = updated.reduce((acc, e) => acc + e.amount, 0);
+                    setExternalExpensesTotal(sum);
+                    try {
+                      localStorage.setItem('faturaflow_external_expenses_v1', JSON.stringify(updated));
+                    } catch {
+                      // ignore
+                    }
+                  }}
                 />
               </div>
             )}
@@ -552,6 +604,16 @@ export default function Home() {
         onClose={() => setIsUploadOpen(false)}
         onUpload={handleUploadFile}
         isUploading={isUploading}
+      />
+
+      {/* PDF Export Modal */}
+      <PdfExportModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        summary={summary}
+        externalExpenses={externalExpenses}
+        externalExpensesTotal={externalExpensesTotal}
+        invoices={invoices}
       />
     </div>
   );

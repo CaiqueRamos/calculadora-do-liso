@@ -20,6 +20,7 @@ interface DocumentManagerProps {
   onUploadFile: (file: File) => Promise<void>;
   isUploading: boolean;
   onRefresh: () => void;
+  onOpenPdfExport?: () => void;
 }
 
 export default function DocumentManager({
@@ -27,6 +28,7 @@ export default function DocumentManager({
   onUploadFile,
   isUploading,
   onRefresh,
+  onOpenPdfExport,
 }: DocumentManagerProps) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedInvoicePreview, setSelectedInvoicePreview] = useState<ParsedInvoice | null>(null);
@@ -122,13 +124,25 @@ export default function DocumentManager({
             </span>
           </div>
 
-          <button
-            onClick={onRefresh}
-            className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Recarregar pasta
-          </button>
+          <div className="flex items-center gap-3">
+            {onOpenPdfExport && (
+              <button
+                onClick={onOpenPdfExport}
+                className="px-3 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <FileText className="w-3.5 h-3.5 text-rose-400" />
+                <span>Gerar Relatório PDF</span>
+              </button>
+            )}
+
+            <button
+              onClick={onRefresh}
+              className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Recarregar pasta
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

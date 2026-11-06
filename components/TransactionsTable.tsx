@@ -11,7 +11,8 @@ import {
   Layers, 
   Download,
   Clock,
-  Sparkles
+  Sparkles,
+  FileText
 } from 'lucide-react';
 import { Transaction, formatBRL, CATEGORY_COLORS } from '@/lib/invoiceParser';
 
@@ -19,12 +20,14 @@ interface TransactionsTableProps {
   transactions: Transaction[];
   selectedBank: string | null;
   onSelectBank: (b: string | null) => void;
+  onOpenPdfExport?: () => void;
 }
 
 export default function TransactionsTable({
   transactions,
   selectedBank,
   onSelectBank,
+  onOpenPdfExport,
 }: TransactionsTableProps) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -92,12 +95,25 @@ export default function TransactionsTable({
           </p>
         </div>
 
-        {/* Filter total */}
-        <div className="px-4 py-2 rounded-xl bg-slate-950/60 border border-white/5 light:bg-slate-50 light:border-slate-200 flex items-center gap-3">
-          <span className="text-xs text-slate-400">Total filtrado:</span>
-          <span className="text-sm font-bold text-white dark:text-white light:text-slate-900">
-            {formatBRL(totalFilteredAmount)}
-          </span>
+        {/* Actions & Filter total */}
+        <div className="flex items-center gap-2.5">
+          {onOpenPdfExport && (
+            <button
+              onClick={onOpenPdfExport}
+              title="Gerar relatório em PDF com estes lançamentos"
+              className="px-3.5 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-rose-500/10 active:scale-95"
+            >
+              <FileText className="w-3.5 h-3.5 text-rose-400" />
+              <span>Gerar PDF</span>
+            </button>
+          )}
+
+          <div className="px-4 py-2 rounded-xl bg-slate-950/60 border border-white/5 light:bg-slate-50 light:border-slate-200 flex items-center gap-3">
+            <span className="text-xs text-slate-400">Total filtrado:</span>
+            <span className="text-sm font-bold text-white dark:text-white light:text-slate-900">
+              {formatBRL(totalFilteredAmount)}
+            </span>
+          </div>
         </div>
       </div>
 
